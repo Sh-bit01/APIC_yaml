@@ -1,0 +1,199 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: 1181_mapping
+  x-ibm-name: 1181_mapping
+basePath: /1181_mapping
+x-ibm-configuration:
+  properties:
+    target-url:
+      value: https://jsonplaceholder.typicode.com/todos/1
+      description: URL of the proxy policy
+      encoded: false
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - invoke:
+          version: 2.0.0
+          title: invoke
+          backend-type: detect
+          header-control:
+            type: blocklist
+            values: []
+          parameter-control:
+            type: allowlist
+            values: []
+          timeout: 60
+          verb: keep
+          chunked-uploads: true
+          persistent-connection: true
+          target-url: $(target-url)
+          follow-redirects: false
+          inject-proxy-headers: true
+      - parse:
+          version: 2.2.0
+          title: parse
+          parse-settings-reference:
+            default: apic-default-parsesettings
+      - validate:
+          version: 2.7.0
+          title: validate
+          graphql-error-policy: all
+          compile-settings: {}
+          validate-against: definition
+          definition: '#/definitions/jsonDef'
+      - map:
+          inputs:
+            input:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: number
+                  id:
+                    type: number
+                  title:
+                    type: string
+                  completed:
+                    type: boolean
+                $$title: input
+              variable: message.body
+              content: application/json
+          outputs:
+            output:
+              schema:
+                type: object
+                properties:
+                  root:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                      id:
+                        type: string
+                      title:
+                        type: string
+                      completed:
+                        type: string
+                    xml:
+                      namespace: ''
+                $$title: output
+              variable: message.body
+              content: application/xml
+          actions:
+            - set: output.root.userId
+              from: input.userId
+            - set: output.root.id
+              from: input.id
+            - set: output.root.title
+              from: input.title
+            - set: output.root.completed
+              from: input.completed
+          version: 2.1.0
+          title: map
+          options:
+            mapEmulateV4EmptyJSONObject: false
+            mapEmulateV4DefaultRequiredProps: false
+            mapEnablePostProcessingJSON: false
+            mapReferenceLimit: 1
+      - validate:
+          version: 2.7.0
+          title: validate
+          graphql-error-policy: all
+          compile-settings:
+            xslt-version: XSLT10
+          validate-against: url
+          xml-validation-mode: xsd
+          xml-schema: http://192.168.1.208:8000/xml_schema.xsd
+    catch: []
+  activity-log:
+    enabled: true
+    success-content: activity
+    error-content: payload
+paths:
+  /:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      consumes: []
+      produces: []
+    put:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      consumes: []
+      produces: []
+    post:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      consumes: []
+      produces: []
+    delete:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      consumes: []
+      produces: []
+    head:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      consumes: []
+      produces: []
+    patch:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      consumes: []
+      produces: []
+schemes:
+  - https
+definitions:
+  jsonDef:
+    title: json
+    type: object
+    properties:
+      userId:
+        type: integer
+      id:
+        type: integer
+      title:
+        type: string
+      completed:
+        type: boolean
+    required:
+      - userId
+      - id
+      - title
+      - completed
+consumes: []
+produces:
+  - application/xml
+securityDefinitions:
+  id:
+    type: apiKey
+    x-key-type: client_id
+    name: X-IBM-Client-Id
+    in: header
+security:
+  - id: []

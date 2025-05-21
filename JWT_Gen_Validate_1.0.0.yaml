@@ -1,0 +1,107 @@
+swagger: '2.0'
+info:
+  title: JWT_Gen_Validate
+  x-ibm-name: JWT_Gen_Validate
+  version: 1.0.0
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - set-variable:
+          version: 2.0.0
+          title: set-variable
+          actions:
+            - set: hs256-k
+              value: >-
+                { "alg": "HS256", "kty": "oct", "use": "sig", "k":
+                "o5yErLaE-dbgVpSw65Rq57OA9dHyaF66Q_Et5azPa-XUjbyP0w9iRWhR4kru09aFfQLXeIODIN4uhjElYKXt8n76jt0Pjkd2pqk4t9abRF6tnL19GV4pflfL6uvVKkP4weOh39tqHt4TmkBgF2P-gFhgssZpjwq6l82fz3dUhQ2nkzoLA_CnyDGLZLd7SZ1yv73uzfE2Ot813zmig8KTMEMWVcWSDvy61F06vs_6LURcq_IEEevUiubBxG5S2akNnWigfpbhWYjMI5M22FOCpdcDBt4L7K1-yHt95Siz0QUb0MNlT_X8F76wH7_A37GpKKJGqeaiNWmHkgWdE8QWDQ",
+                "kid": "hs256-key" }
+              type: string
+      - operation-switch:
+          version: 2.0.0
+          title: operation-switch
+          case:
+            - operations:
+                - verb: get
+                  path: /Generate
+              execute:
+                - jwt-generate:
+                    version: 2.0.0
+                    title: jwt-generate
+                    jwt: message.body
+                    iss-claim: request.headers.iss
+                    exp-claim: 3600
+                    aud-claim: request.headers.aud
+                    jws-alg: HS256
+                    jws-jwk: hs256-k
+            - operations:
+                - verb: get
+                  path: /Validate
+              execute:
+                - jwt-validate:
+                    version: 2.0.0
+                    title: jwt-validate
+                    jwt: request.headers.authorization
+                    output-claims: message.body
+          otherwise: []
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: activity
+    error-content: payload
+  servers:
+    - url: https://192.168.3.183:9446/apicbatch4/saikrishna-1172/jwt_
+      description: ''
+      type:
+        - production
+        - development
+  oauth-servers: {}
+basePath: /jwt_
+paths:
+  /Generate:
+    parameters:
+      - name: iss
+        required: true
+        in: header
+        type: string
+      - name: aud
+        required: true
+        in: header
+        type: string
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+  /Validate:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - in: header
+          type: string
+          name: Authorization
+          required: true
+securityDefinitions:
+  clientID:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+security:
+  - clientID: []
+schemes:
+  - https

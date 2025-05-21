@@ -1,0 +1,114 @@
+swagger: '2.0'
+info:
+  title: transforamtion
+  x-ibm-name: hava_hava1
+  version: 1.0.0
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - parse:
+          version: 2.2.0
+          title: parse
+          parse-settings-reference:
+            default: apic-default-parsesettings
+      - operation-switch:
+          version: 2.0.0
+          title: operation-switch
+          case:
+            - operations:
+                - verb: post
+                  path: /xml
+              execute:
+                - xml-to-json:
+                    version: 2.0.0
+                    title: xml-to-json
+            - operations:
+                - verb: post
+                  path: /json
+              execute:
+                - json-to-xml:
+                    version: 2.0.0
+                    title: json-to-xml
+                    root-element-name: json
+                    always-output-root-element: false
+                    unnamed-element-name: element
+                    conversionType: relaxed-badgerfish
+          otherwise: []
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: activity
+    error-content: payload
+basePath: /hava_hava
+paths:
+  /xml:
+    post:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - name: ii
+          required: true
+          in: body
+          schema:
+            title: data2
+            type: object
+            properties:
+              id:
+                type: string
+                minimum: 0
+              name:
+                type: string
+              dep:
+                type: string
+  /json:
+    post:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - required: true
+          name: inf
+          in: body
+          schema:
+            title: data
+            type: object
+            properties:
+              id:
+                type: integer
+                minimum: 1
+              name:
+                type: string
+              address:
+                type: string
+schemes:
+  - https
+securityDefinitions:
+  id:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+    x-key-type: client_id
+  key:
+    type: apiKey
+    x-key-type: client_secret
+    name: X-IBM-Client-Secret
+    in: header
+security:
+  - id: []
+    key: []

@@ -1,0 +1,118 @@
+swagger: '2.0'
+info:
+  title: AS_JWT_Gen&Validate
+  x-ibm-name: as_jwt_gen-validate
+  version: 1.0.0
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - set-variable:
+          version: 2.0.0
+          title: set-variable
+          actions:
+            - set: jwt
+              value: >-
+                {     "p":
+                "zevYxUHFehHDlzC99aJfuPxh75aQ-HAJH1Y8fNl9FF1hWkRU6DhTCth0NKohplcOyTSwJVcUKKgMJZgTlX1ZzLlh_7ABciiDQgoK8hHrfT2yPgMSsOGP5zA2uuwapCZUsPlBg1jOm_LzPXmqmwZoZQ0H5DNpvgcnojiRx2cIBCs",    
+                "kty": "RSA",     "q":
+                "xvp6LbSEy9xoI5JLkE9pND1s75WGg0G8NOz7izKXoYTTpzzD_E536NP5o5dHMFeRCjW6r84Tb6Ejwl7SxXn3SXypuOFXo8iEIyMgimYal6m028Umsux72KHaK_T6UUHo58sWh645T1aSMZ_q7hg84Y6xt3Z_0AROdIot1VpUNFM",    
+                "d":
+                "mD0-bN6aYBupg-bDCqxO0udhMqfhGBz2mFCOIoKGpH0-BoqcAy6A8exocU-NCRIcPT7OTx4-GADvqSehKMlmlEyai7L4u_5yY7bgbX6wu-SpYMW5-V4hhxgW2MvRXXDwdE-Hvu4icJCYgWcUAladN4cRM4qK__4UTr0aZiBFrO0kGvctFazSnCx0jtVABBi8GBv3teEywBIrmNnIFWVdvJVwrC4xuJEwWKT4nGJdhCXQuF6nwfrAPmPABbWOstruYJUDalK17kQjvteszhf8ZgLGBgo8sd6VCDQcCqgsn6ERdBBaszqBKMtbj4Q4Tp7HSUL40g9o8i21P3Sf_eCzdQ",    
+                "e": "AQAB",     "use": "sig",     "kid":
+                "28rWtvmZrIh16UuXlEfwVnvM1g-rtSmvPJr5DOXO7uA",     "qi":
+                "xBwYEYZjfyEdbxn8IrPqioFqKwfZdnSfL__rfR6ounyLlYnmMTNTihCCUur2Ix8YnZAIuwyPFNHXiXA8Ne7koeSOAC4JS-yHXjayj1yBGqkzcuQlofbVQ0t2LuJNLpo31nQVfNTtXVuy_p7FRuIoleUCgqCk4unZLWd5BflpFQ",    
+                "dp":
+                "rtCbPZMBqAjuqCrcCW0ooG26YuDK_-51ACKAxWkJ08EWxcAe6OnwLdPmi1MnsARWbCALrheH6KAJd9zsO0uocbGr7ZopEBYuoGDQPANUjQVUjWqkcn97YERBIl0QnOxhl8BziqNY-3G8aCMi3-sHs0nluiifi5CdaA1oTQU9-_M",    
+                "alg": "RS256",     "dq":
+                "hqlDgKUX7mPG8rPygcLMfzdG_0nhk_kr52Gux0DBD-W13Auq05lDW4YB_-3ElvncRd2g75P24WhbrBLCcDUf31MIBgAzcLumeaUvQ5rgSl3m8YkWrKaRFkZLQc50jgOeHSj7oW2OiZwcKouA0gwDP99zdKc0ztHrSsGtTSPpstM",    
+                "n":
+                "oA3kQWp4uUllzsL9j_l34DC0vIkIHFhBkJTaifJ19x7uBA1EVsKu6BNktSvuT5OJ-HKsh-KVohNXWq1nLLIUrh8EcMr8_mYtMN72TCBnI2jg1w54k9eNde5Kp8lXIQgRus1HO5eMHqYFszo6BGeq__jwf-ot3a44Xz-ld_BxZkEZqn2LSJBG_nVTJYo7I1f34MM2SpZ5NPSK6i3BlLRs0zXHa-kBAW5ckhC3yhB3RNhUW-OqNDEBFvdVcWng5mEQFPfENjAQmDBPd-KNvqy75jAXangT5JBqiiyuQDb2nR8XqjQz7bfPo0_9n2_1YERfnT3Q00Fp8fHjL2tzhI4V8Q"
+                }
+              type: string
+      - operation-switch:
+          version: 2.0.0
+          title: operation-switch
+          case:
+            - operations:
+                - verb: get
+                  path: /Generate
+              execute:
+                - jwt-generate:
+                    version: 2.1.0
+                    title: jwt-generate
+                    jwt: message.body
+                    iss-claim: request.headers.iss
+                    exp-claim: 3600
+                    jws-jwk: jwt
+                    jws-alg: RS256
+                    jwe-jwk: ''
+                    aud-claim: request.headers.aud
+                    custom-kid-value-jwe: ''
+                    custom-kid-value-jws: 28rWtvmZrIh16UuXlEfwVnvM1g-rtSmvPJr5DOXO7uA
+                    jti-claim: true
+            - operations:
+                - verb: get
+                  path: /Validate
+              execute:
+                - jwt-validate:
+                    version: 2.0.0
+                    title: jwt-validate
+                    jwt: request.headers.authorization
+                    output-claims: message.body
+                    jwe-jwk: ''
+          otherwise: []
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: activity
+    error-content: payload
+basePath: /as_jwt_gen-validate
+paths:
+  /Generate:
+    parameters:
+      - name: iss
+        required: true
+        in: header
+        type: string
+      - name: aud
+        required: true
+        in: header
+        type: string
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+  /Validate:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - in: header
+          type: string
+          name: Authorization
+          required: true
+securityDefinitions:
+  clientID:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+security:
+  - clientID: []
+schemes:
+  - https
