@@ -1,0 +1,129 @@
+swagger: '2.0'
+info:
+  title: JWT Generation and Validation
+  x-ibm-name: jwt-generation-and-validation
+  version: 1.0.0
+  description: >
+    This API has two parts 
+
+    1. Generate JWT: The generate operation takes care of generating jwt token
+    and setting that to response payload Authorization header
+
+    2. 
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - operation-switch:
+          version: 2.0.0
+          title: operation-switch
+          case:
+            - operations:
+                - verb: get
+                  path: /generate
+              execute:
+                - jwt-generate:
+                    version: 2.0.0
+                    title: jwt-generate
+                    jwt: ''
+                    iss-claim: request.headers.iss-claim
+                    exp-claim: 60
+                    description: //This policy is to generate JWT token for client request.
+                    jws-alg: RS256
+                    jws-crypto: personal_sandbox_tlsp-jwt-keyprofileV1.0.0-key
+                    jti-claim: true
+                    aud-claim: request.headers.aud-claim
+            - operations:
+                - verb: get
+                  path: /validate
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: >-
+                      var jwttoken =
+                      context.request.header.get('Authorization');
+
+
+                      context.set('input-jwt', jwttoken.replace(/^Bearer /g,
+                      ''));
+                - jwt-validate:
+                    version: 2.0.0
+                    title: jwt-validate
+                    jwt: input-jwt
+                    output-claims: decoded.claims
+                    iss-claim: apic
+                    aud-claim: id1
+                    jws-crypto: personal_sandbox_tlsp-jwt-keyprofileV1.0.0-ca-0
+                    jwe-crypto: ''
+                - set-variable:
+                    version: 2.0.0
+                    title: set-variable
+                    actions:
+                      - set: message.body
+                        value: $(decoded.claims)
+                        type: string
+                      - set: message.headers.Content-Type
+                        value: application/json
+                        type: string
+                    description: >-
+                      This policy is setting response body from the extracted
+                      jwt verification
+          otherwise: []
+    catch:
+      - errors:
+          - RuntimeError
+        execute:
+          - set-variable:
+              version: 2.0.0
+              title: set-variable
+              actions:
+                - set: message.status.code
+                  value: 400
+                  type: number
+                - set: message.status.reason
+                  value: Bad Request
+                  type: string
+                - set: message.body
+                  value: $(jwt-validate.error-message)
+                  type: string
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: activity
+    error-content: payload
+basePath: /securetoken
+paths:
+  /generate:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+  /validate:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+securityDefinitions:
+  clientID:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+security:
+  - clientID: []
+schemes:
+  - https

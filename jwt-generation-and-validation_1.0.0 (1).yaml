@@ -1,0 +1,102 @@
+swagger: '2.0'
+info:
+  title: 1181_JWT Generation and Validation
+  x-ibm-name: jwt-generation-and-validation
+  version: 1.0.0
+  description: >
+    This API has two parts 
+
+    1. Generate JWT: The generate operation takes care of generating jwt token
+    and setting that to response payload Authorization header
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - operation-switch:
+          version: 2.0.0
+          title: operation-switch
+          case:
+            - operations:
+                - verb: get
+                  path: /generate
+              execute:
+                - jwt-generate:
+                    version: 2.0.0
+                    title: jwt-generate
+                    jwt: message.body
+                    iss-claim: request.headers.iss-claim
+                    exp-claim: 60
+                    description: //This policy is to generate JWT token for client request.
+                    jws-alg: RS256
+                    jws-crypto: apic-iib_sandbox_tlsp-jwt-keyprofileV1.0.0-key
+                    jti-claim: true
+                    aud-claim: request.headers.aud-claim
+            - operations:
+                - verb: get
+                  path: /validate
+              execute:
+                - jwt-validate:
+                    version: 2.0.0
+                    title: jwt-validate
+                    jwt: request.headers.authorization
+                    output-claims: message.body
+                    iss-claim: apic
+                    aud-claim: id1
+                    jws-crypto: apic-iib_sandbox_tlsp-jwt-keyprofileV1.0.0-ca-0
+                    jwe-crypto: ''
+          otherwise: []
+    catch: []
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: activity
+    error-content: payload
+basePath: /securetoken
+paths:
+  /generate:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+    parameters:
+      - name: iss-claim
+        required: true
+        in: header
+        type: string
+      - name: aud-claim
+        required: true
+        in: header
+        type: string
+  /validate:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+    parameters:
+      - name: Authorization
+        required: true
+        in: header
+        type: string
+securityDefinitions:
+  clientID:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+security:
+  - clientID: []
+schemes:
+  - https
