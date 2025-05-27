@@ -1,0 +1,110 @@
+swagger: '2.0'
+info:
+  title: Task_friday_MappingPolicy_1181
+  x-ibm-name: Task_friday
+  version: 1.0.0
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - parse:
+          version: 2.2.0
+          title: parse
+          parse-settings-reference:
+            default: apic-default-parsesettings
+      - map:
+          inputs:
+            input:
+              schema:
+                type: object
+                properties:
+                  Id:
+                    type: number
+                  name:
+                    type: string
+                  salary:
+                    type: number
+              variable: request.body
+          outputs:
+            output:
+              schema:
+                type: object
+                properties:
+                  Id:
+                    type: number
+                  name:
+                    type: string
+                  salary:
+                    type: number
+                  InHand_Salary:
+                    type: number
+              variable: message.body
+          actions:
+            - set: output.Id
+              from: input.Id
+            - set: output.name
+              from: input.name
+              value: $(1).toUpperCase()
+            - set: output.salary
+              from: input.salary
+            - set: output.InHand_Salary
+              from: input.salary
+              value: $(1) - $(1) * 0.07
+          version: 2.1.0
+          title: map
+          options:
+            mapEmulateV4EmptyJSONObject: false
+            mapEmulateV4DefaultRequiredProps: false
+            mapEnablePostProcessingJSON: false
+            mapReferenceLimit: 1
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: activity
+    error-content: payload
+basePath: /task
+paths:
+  /:
+    post:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - name: user_summary
+          required: true
+          in: body
+          schema:
+            title: root
+            type: object
+            properties:
+              Id:
+                type: number
+              name:
+                type: string
+              salary:
+                type: number
+      produces:
+        - application/json
+      consumes:
+        - application/json
+securityDefinitions:
+  clientID:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+security:
+  - clientID: []
+schemes:
+  - https
