@@ -1,0 +1,340 @@
+swagger: '2.0'
+info:
+  title: 1181_Task
+  x-ibm-name: 1181_task
+  version: 1.0.0
+x-ibm-configuration:
+  cors:
+    enabled: true
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  assembly:
+    execute:
+      - operation-switch:
+          version: 2.0.0
+          title: operation-switch
+          case:
+            - operations:
+                - verb: get
+                  path: /qury
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: >
+                      var apim = require('apim');
+
+
+                      var a = apim.getvariable('request.parameters.a');
+
+                      var b = apim.getvariable('request.parameters.b');
+
+
+                      var n1 = Number(a);
+
+                      var n2 = Number(b);
+
+
+
+                      if (isNaN(n1) || isNaN(n2)) {
+                        context.reject("error","Invalid Input...."); 
+                        return;
+                      }
+
+
+                      var sum = Number(a) + Number(b);
+
+
+                      //var result={
+                       // variable_A : a,
+                       // variable_B : b,
+                       // sum : sum
+                      //}
+
+
+                      var result = "Sum of the numbers " + a + " and " + b + "
+                      is " + sum;
+
+                      apim.setvariable('message.body', result);
+            - operations:
+                - verb: post
+                  path: /aadhar
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: |+
+                      var apim = require('apim');
+
+                      var req = apim.getvariable('message.body');
+
+                      var aadhaarId = req.AADHAARID;
+                      var data;
+                      if (aadhaarId == '' || aadhaarId == null ) {
+                          apim.setvariable('message.status.code', 400);
+
+                          data = {
+                              ecode: "400",
+                              eMessage: "AADHAARID is missing"
+                          };
+
+                      } else {
+                        data = req;
+                        
+                      }
+
+                      apim.setvariable('message.body', data);
+
+
+            - operations:
+                - verb: post
+                  path: /date
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: |-
+                      var apim = require('apim');
+
+                      var req = apim.getvariable('message.body');
+                      var date = req.BIRTHDATE;
+                      var con;
+                      var parts = date.split("/");
+                      if (parts.length === 3) {
+                          con = parts[2] + "-" + parts[1] + "-" + parts[0]; 
+                        }
+                      else{
+                          context.reject("Error","Date is Not Proper"); 
+                      }
+                      req.BIRTHDATE = con;
+
+                      apim.setvariable('message.body', req);
+            - operations:
+                - verb: get
+                  path: /country
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: >-
+                      var apim = require('apim');
+
+
+                      var country =
+                      apim.getvariable('request.parameters.country');
+
+
+                      var data;
+
+
+                      if (country == 'IN') {
+                          data = {
+                            status: "Success"
+                          };
+                      } else {
+                          apim.setvariable('message.status.code', 403);
+                          data = {
+                            ecode: "403",
+                            eMessage : "Invalid Country"
+                          };
+                          context.reject('error', 'Invalid Country');
+                      }
+
+
+                      // Set the response message
+
+                      apim.setvariable('message.body', data);
+            - operations:
+                - verb: get
+                  path: /uptime
+              execute:
+                - gatewayscript:
+                    version: 2.0.0
+                    title: gatewayscript
+                    source: |
+                      var apim = require('apim');
+                      var hour = apim.getvariable('system.time.hour');
+                      var data;
+                      if (hour <= 9 || hour > 10) {
+                          apim.setvariable('message.status.code', 403);
+                          data = {
+                            status : "Outside the Time Window",
+                            currentHour: hour
+                          };
+                          context.reject("Error" , "Outside the Time Window"); 
+
+                      } else {
+                         data = {
+                              message: "Access granted",
+                              currentHour: hour
+                          };
+                      }
+                      apim.setvariable('message.body', data);
+          otherwise: []
+  properties:
+    target-url:
+      value: http://example.com/operation-name
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    enabled: true
+    success-content: activity
+    error-content: payload
+basePath: /1181_task
+paths:
+  /qury:
+    parameters:
+      - name: a
+        in: query
+        required: true
+        type: integer
+      - name: b
+        required: true
+        in: query
+        type: integer
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters: []
+  /aadhar:
+    post:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - name: param
+          in: body
+          required: false
+          schema:
+            type: object
+            properties:
+              AADHAARTYPE:
+                type: string
+                example: IND1
+              PANNUMBER:
+                type: string
+                example: '1174843344'
+              STATE:
+                type: string
+                example: UP
+              AADHAARID:
+                type: string
+                example: '136211001811144'
+              NAME:
+                type: string
+                example: GHOSH
+              IDTYPE:
+                type: string
+                example: CARD
+              IDNUMBER:
+                type: string
+                example: '811144'
+              PASSPORT:
+                type: string
+                example: M2264445
+              SECURITYCODE:
+                type: string
+                example: '9'
+              BIRTHDATE:
+                type: string
+                format: date
+                example: '1999-10-03'
+              BIRTHTIME:
+                type: string
+                example: '15:43:10'
+              REFNUMBER:
+                type: string
+                example: 20251003AC1
+              PHONENUMBER:
+                type: string
+                example: '9988888518221'
+  /date:
+    post:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - name: date
+          in: body
+          required: false
+          schema:
+            type: object
+            properties:
+              AADHAARTYPE:
+                type: string
+                example: IND1
+              PANNUMBER:
+                type: string
+                example: '1174843344'
+              STATE:
+                type: string
+                example: UP
+              AADHAARID:
+                type: string
+                example: '136211001811144'
+              NAME:
+                type: string
+                example: GHOSH
+              IDTYPE:
+                type: string
+                example: CARD
+              IDNUMBER:
+                type: string
+                example: '811144'
+              PASSPORT:
+                type: string
+                example: M2264445
+              SECURITYCODE:
+                type: string
+                example: '9'
+              BIRTHDATE:
+                type: string
+                format: date
+                example: 05/04/2001
+              BIRTHTIME:
+                type: string
+                example: '15:43:10'
+              REFNUMBER:
+                type: string
+                example: 20251003AC1
+              PHONENUMBER:
+                type: string
+                example: '9988888518221'
+  /country:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters:
+        - name: country
+          in: query
+          type: string
+  /uptime:
+    get:
+      responses:
+        '200':
+          description: success
+          schema:
+            type: string
+      parameters: []
+securityDefinitions:
+  clientID:
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
+security:
+  - clientID: []
+schemes:
+  - https
